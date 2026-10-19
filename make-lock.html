@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Make lock</title>
+<style>body{font-family:system-ui,sans-serif;max-width:560px;margin:2rem auto;padding:0 1rem;line-height:1.5}input,button{font:inherit;padding:.6rem;margin:.3rem 0}input{width:100%;box-sizing:border-box}textarea{width:100%;height:5rem;font-family:monospace}</style></head><body>
+<h1>Set the password 🔒</h1>
+<p>Type the secret word. Capitals, spaces and punctuation are ignored, so "Sweet Heart!" and "sweetheart" both work. Then copy the two lines into the <code>gate</code> section of <code>js/content.js</code>.</p>
+<input id="pw" placeholder="secret word"><button id="go">Make lines</button>
+<textarea id="out" readonly></textarea>
+<script>
+const norm=s=>s.toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}]/gu,"");
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+document.getElementById("go").onclick=async()=>{
+ const pw=norm(document.getElementById("pw").value); if(!pw){out.value="Type something first.";return}
+ const salt=crypto.getRandomValues(new Uint8Array(16));
+ const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+ const b=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:150000,hash:"SHA-256"},k,256);
+ out.value='salt: "'+hex(salt)+'",\nhash: "'+hex(b)+'"';
+};
+</script></body></html>
